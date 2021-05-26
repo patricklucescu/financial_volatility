@@ -40,6 +40,33 @@ DCC11_cov <- ggplot(data = data.frame('rcov' = rcov(dcc11fit)[1,2,], 'time' = da
   theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(dcc11fit)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
   geom_line(data = data.frame('rcov' = rcov(dcc11fit)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Covariance", labels = c("cov(EEM,SPY)", "cov(EEM,EZU)", 'cov(SPY,EZU)'))
 
+# DCC 1,1 Normal with GARCH 1,1
+DCC11spec_n <- dccspec(multispec(c(uspec, uspec, uspec)), distribution = 'mvnorm', model = 'DCC')
+dcc11fit_n <- dccfit(DCC11spec_n, data = data[,2:4])
+varcovDCC11_n <- rcov(dcc11fit_n)
+cormatDCC11_n <- rcor(dcc11fit_n)
+
+
+# Model Summary
+summaryDCC11_n <- show(dcc11fit_n)
+coefDCC11_n <- coef(dcc11fit_n)
+
+# Conditional Variance plot
+DCC11_var_n <- ggplot(data = data.frame('rcov' = rcov(dcc11fit_n)[1,1,], 'time' = data['DT']), aes(x = DT, y = rcov)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Variance') + ggtitle('Conditional Variance from DCC GARCH (1,1) with normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(dcc11fit_n)[2,2,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcov' = rcov(dcc11fit_n)[3,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Variance", labels = c("EEM", "SPY", 'EZU'))
+
+# Correlation Plot
+DCC11_cor_n <- ggplot(data = data.frame('rcor' = rcor(dcc11fit_n)[1,2,], 'time' = data['DT']), aes(x = DT, y = rcor)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Correlation') + ggtitle('Conditional Correlation from DCC GARCH (1,1) with normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcor' = rcor(dcc11fit_n)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcor' = rcor(dcc11fit_n)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Correlation", labels = c("cor(EEM,SPY)", "cor(EEM,EZU)", 'cor(SPY,EZU)'))
+
+# Conditional Covariance plot
+DCC11_cov_n <- ggplot(data = data.frame('rcov' = rcov(dcc11fit_n)[1,2,], 'time' = data['DT']), aes(x = DT, y = rcov)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Covariance') + ggtitle('Conditional Covariance from DCC GARCH (1,1) with normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(dcc11fit_n)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcov' = rcov(dcc11fit_n)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Covariance", labels = c("cov(EEM,SPY)", "cov(EEM,EZU)", 'cov(SPY,EZU)'))
+
+
 # Flexible DCC GARCH 1,1 model
 DCC11spec_f <- dccspec(multispec(c(uspec, uspec, uspec)), distribution = 'mvnorm', model = 'FDCC', groups = seq(1,3))
 dcc11fit_f <- dccfit(DCC11spec_f, data = data[,2:4])
@@ -128,6 +155,10 @@ ugarchfit(spec = uspec, data[,4], distribution = 'mvt')
 models_list = list(c('sGARCH','gjrGARCH', 'eGARCH', 'iGARCH', 'csGARCH', 'apARCH', 'fGARCH', 'fGARCH', 'fGARCH'))
 submodels_list = list(c('GARCH','TGARCH','GJRGARCH'))
 
+coef_sums <- matrix(NA, nrow = lengths(models_list), ncol = 3)
+rownames(coef_sums) <- c('sGARCH','gjrGARCH', 'eGARCH', 'iGARCH', 'csGARCH', 'apARCH', 'fGARCH','fTGARCH','fGJRGARCH')
+colnames(coef_sums) <- c('EEM', 'SPY', 'EZU')
+
 BIC_mat <- matrix(NA, nrow = lengths(models_list), ncol = 3)
 rownames(BIC_mat) <- c('sGARCH','gjrGARCH', 'eGARCH', 'iGARCH', 'csGARCH', 'apARCH', 'fGARCH','fTGARCH','fGJRGARCH')
 colnames(BIC_mat) <- c('EEM', 'SPY', 'EZU')
@@ -135,25 +166,35 @@ colnames(BIC_mat) <- c('EEM', 'SPY', 'EZU')
 for (y in 2:length(data)){
   for (i in 1:lengths(models_list)){
     if (i >= 7){
-      fit <- ugarchfit(ugarchspec(variance.model = list(model = models_list[[1]][i], submodel = submodels_list[[1]][i-6]), distribution.model = 'std'), data[,y])
-      fit_val <- ugarchfit(ugarchspec(variance.model = list(model = models_list[[1]][i], submodel = submodels_list[[1]][i-6]),fixed.pars = list(coef(fit)), distribution.model = 'std'), data_val[,y])
+      fit <- ugarchfit(ugarchspec(variance.model = list(model = models_list[[1]][i],  submodel = submodels_list[[1]][i-6]), distribution.model = 'std', fixed.pars=list(omega=0)), data[,y])
+      coef_sums[i,y-1] <- sum(coef(fit)[-length(coef(fit))])
+      fit_val <- ugarchfit(ugarchspec(variance.model = list(model = models_list[[1]][i], submodel = submodels_list[[1]][i-6]), fixed.pars = list(coef(fit)), distribution.model = 'std'), data_val[,y])
       BIC_mat[i,y-1] <- infocriteria(fit_val)[2]
       } else if (i<7){
       fit <- ugarchfit(ugarchspec(variance.model = list(model = models_list[[1]][i]), distribution.model = 'std'), data[,y])
       fit_val <- ugarchfit(ugarchspec(variance.model = list(model = models_list[[1]][i]), fixed.pars = list(coef(fit)), distribution.model = 'std'), data_val[,y])
       BIC_mat[i,y-1] <- infocriteria(fit_val)[2]
+      coef_sums[i,y-1] <- sum(coef(fit)[-length(coef(fit))])
     }
       }
 }
 
+coef_sums # Check Weak Staionrity
+BIC_mat # Check BIC values
+fit <- ugarchfit(ugarchspec(variance.model = list(model = 'fGARCH',  submodel = 'TGARCH'), distribution.model = 'std'), data[,4])
+log(coef(fit)['beta1']) # TGARCH stationary (Zakoian version 1994)
+fit <- ugarchfit(ugarchspec(variance.model = list(model = 'eGARCH'),mean.model = list(armaOrder = c(0, 0), include.mean = F), distribution.model = 'std'), data[,2])
+(coef(fit)['beta1']) # EGARCH stationary
+fit <- ugarchfit(ugarchspec(variance.model = list(model = 'eGARCH'),mean.model = list(armaOrder = c(0, 0), include.mean = F), distribution.model = 'std'), data[,3])
+(coef(fit)['beta1']) # EGARCH stationary
 
-min(BIC_mat[,1]) # Optimal Specification: EGARCH
-min(BIC_mat[,2]) # Optimal Specification: EGARCH
-min(BIC_mat[,3]) # Optimal Specification: fTGARCH
+min(BIC_mat[,1]) # Optimal Stationary Specification: EGARCH
+min(BIC_mat[,2]) # Optimal Stationary Specification: EGARCH
+min(BIC_mat[,3]) # Optimal Stationary Specification: fGARCH
 
 uspec_opt1 <- ugarchspec(variance.model = list(model = 'eGARCH'), distribution.model = 'std')
 uspec_opt2 <- ugarchspec(variance.model = list(model = 'eGARCH'), distribution.model = 'std')
-uspec_opt3 <- ugarchspec(variance.model = list(model = 'eGARCH', submodel = 'TGARCH'), distribution.model = 'std')
+uspec_opt3 <- ugarchspec(variance.model = list(model = 'fGARCH',  submodel = 'TGARCH'), distribution.model = 'std')
 
 # DCC optimum 3 Stocks
 DCC_opt_spec <- dccspec(multispec(c(uspec_opt1, uspec_opt2, uspec_opt3)), distribution = 'mvt', model = 'DCC')
@@ -178,6 +219,31 @@ DCC_opt_cor <- ggplot(data = data.frame('rcor' = rcor(dcc_opt_fit)[1,2,], 'time'
 DCC_opt_cov <- ggplot(data = data.frame('rcov' = rcov(dcc_opt_fit)[1,2,], 'time' = data['DT']), aes(x = DT, y = rcov)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Covariance') + ggtitle('Conditional Covariance from DCC(1,1) and optimal univariate models') +
   theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(dcc_opt_fit)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
   geom_line(data = data.frame('rcov' = rcov(dcc_opt_fit)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Covariance", labels = c("cov(EEM,SPY)", "cov(EEM,EZU)", 'cov(SPY,EZU)'))
+
+
+# DCC optimum 3 Stocks and Normal Distribution
+DCC_opt_spec_n <- dccspec(multispec(c(uspec_opt1, uspec_opt2, uspec_opt3)), distribution = 'mvnorm', model = 'DCC')
+dcc_opt_fit_n <- dccfit(DCC_opt_spec_n, data = data[,2:4])
+varcovDCC_opt_n <- rcov(dcc_opt_fit_n)
+cormatDCC_opt_n <- rcor(dcc_opt_fit_n)
+# Model Summary
+summaryDCC_opt_n <- show(dcc_opt_fit_n)
+coefDCC_opt_n <- coef(dcc_opt_fit_n)
+
+# Conditional Variance plot
+DCC_opt_var_n <- ggplot(data = data.frame('rcov' = rcov(dcc_opt_fit_n)[1,1,], 'time' = data['DT']), aes(x = DT, y = rcov)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Variance') + ggtitle('Conditional Variance from DCC(1,1) and optimal univariate models with normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(dcc_opt_fit_n)[2,2,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcov' = rcov(dcc_opt_fit_n)[3,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Variance", labels = c("EEM", "SPY", 'EZU'))
+
+# Correlation Plot
+DCC_opt_cor_n <- ggplot(data = data.frame('rcor' = rcor(dcc_opt_fit_n)[1,2,], 'time' = data['DT']), aes(x = DT, y = rcor)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Correlation') + ggtitle('Conditional Correlation from DCC(1,1) and optimal univariate models with normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcor' = rcor(dcc_opt_fit_n)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcor' = rcor(dcc_opt_fit_n)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Correlation", labels = c("cor(EEM,SPY)", "cor(EEM,EZU)", 'cor(SPY,EZU)'))
+
+# Conditional Covariance plot
+DCC_opt_cov_n <- ggplot(data = data.frame('rcov' = rcov(dcc_opt_fit_n)[1,2,], 'time' = data['DT']), aes(x = DT, y = rcov)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Covariance') + ggtitle('Conditional Covariance from DCC(1,1) and optimal univariate models with normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(dcc_opt_fit_n)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcov' = rcov(dcc_opt_fit_n)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Covariance", labels = c("cov(EEM,SPY)", "cov(EEM,EZU)", 'cov(SPY,EZU)'))
 
 
 # Asymetric DCC optimum 3 Stocks
@@ -253,6 +319,31 @@ CGARCH11_cov <- ggplot(data = data.frame('rcov' = rcov(cgarch11_fit)[1,2,], 'tim
   theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(cgarch11_fit)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
   geom_line(data = data.frame('rcov' = rcov(cgarch11_fit)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Covariance", labels = c("cov(EEM,SPY)", "cov(EEM,EZU)", 'cov(SPY,EZU)'))
 
+
+# Copula DCC GARCH(1,1) with normal distribution
+CGARCH11spec_n <- cgarchspec(multispec(c(uspec, uspec, uspec)), distribution.model = list(copula = c('mvnorm'), time.varying = T))
+cgarch11_fit_n <- cgarchfit(CGARCH11spec_n, data = data[,2:4])
+cgarch11_cov_n <- rcov(cgarch11_fit_n)
+cgarch11_cor_n <- rcor(cgarch11_fit_n)
+# Model Summary
+summaryCGARCH11_n <- show(cgarch11_fit_n)
+coefCGARCH11_n <- coef(cgarch11_fit_n)
+
+# Conditional Variance plot
+CGARCH11_var_n <- ggplot(data = data.frame('rcov' = rcov(cgarch11_fit_n)[1,1,], 'time' = data['DT']), aes(x = DT, y = rcov)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Variance') + ggtitle('Conditional Variance from Copula with GARCH(1,1) and normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(cgarch11_fit_n)[2,2,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcov' = rcov(cgarch11_fit_n)[3,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Variance", labels = c("EEM", "SPY", 'EZU'))
+
+# Correlation Plot
+CGARCH11_cor_n <- ggplot(data = data.frame('rcor' = rcor(cgarch11_fit_n)[1,2,], 'time' = data['DT']), aes(x = DT, y = rcor)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Correlation') + ggtitle('Conditional Correlation from Copula with GARCH(1,1) and normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcor' = rcor(cgarch11_fit_n)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcor' = rcor(cgarch11_fit_n)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Correlation", labels = c("cor(EEM,SPY)", "cor(EEM,EZU)", 'cor(SPY,EZU)'))
+
+# Conditional Covariance plot
+CGARCH11_cov_n <- ggplot(data = data.frame('rcov' = rcov(cgarch11_fit_n)[1,2,], 'time' = data['DT']), aes(x = DT, y = rcov)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Covariance') + ggtitle('Conditional Covariance from Copula with GARCH(1,1) and normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(cgarch11_fit_n)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcov' = rcov(cgarch11_fit_n)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Covariance", labels = c("cov(EEM,SPY)", "cov(EEM,EZU)", 'cov(SPY,EZU)'))
+
 # Asymetric Copula DCC GARCH(1,1)
 CGARCH11spec_a <- cgarchspec(multispec(c(uspec, uspec, uspec)), distribution.model = list(copula = c('mvt'), time.varying = T, asymetric = T))
 cgarch11_a_fit <- cgarchfit(CGARCH11spec_a, data = data[,2:4])
@@ -302,6 +393,31 @@ CGARCH_opt_cov <- ggplot(data = data.frame('rcov' = rcov(cgarch_opt_fit)[1,2,], 
   theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(cgarch_opt_fit)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
   geom_line(data = data.frame('rcov' = rcov(cgarch_opt_fit)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Covariance", labels = c("cov(EEM,SPY)", "cov(EEM,EZU)", 'cov(SPY,EZU)'))
 
+
+# Copula DCC with optimal models
+CGARCH_opt_spec_n <- cgarchspec(multispec(c(uspec_opt1, uspec_opt2, uspec_opt3)), distribution.model = list(copula = c('mvnorm'), time.varying = T))
+cgarch_opt_fit_n <- cgarchfit(CGARCH_opt_spec_n, data = data[,2:4])
+cgarch_opt_cov_n <- rcov(cgarch_opt_fit_n)
+cgarch_opt_cor_n <- rcor(cgarch_opt_fit_n)
+# Model Summary
+summaryCGARCH_opt_n <- show(cgarch_opt_fit_n)
+coefCGARCH_opt_n <- coef(cgarch_opt_fit_n)
+
+# Conditional Variance plot
+CGARCH_opt_var_n <- ggplot(data = data.frame('rcov' = rcov(cgarch_opt_fit_n)[1,1,], 'time' = data['DT']), aes(x = DT, y = rcov)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Variance') + ggtitle('Conditional Variance from Copula with optimal univaraite models and normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(cgarch_opt_fit_n)[2,2,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcov' = rcov(cgarch_opt_fit_n)[3,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Variance", labels = c("EEM", "SPY", 'EZU'))
+
+# Correlation Plot
+CGARCH_opt_cor_n <- ggplot(data = data.frame('rcor' = rcor(cgarch_opt_fit_n)[1,2,], 'time' = data['DT']), aes(x = DT, y = rcor)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Correlation') + ggtitle('Conditional Correlation from Copula with optimal univaraite models and normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcor' = rcor(cgarch_opt_fit_n)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcor' = rcor(cgarch_opt_fit_n)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Correlation", labels = c("cor(EEM,SPY)", "cor(EEM,EZU)", 'cor(SPY,EZU)'))
+
+# Conditional Covariance plot
+CGARCH_opt_cov_N <- ggplot(data = data.frame('rcov' = rcov(cgarch_opt_fit_n)[1,2,], 'time' = data['DT']), aes(x = DT, y = rcov)) + geom_line(aes(colour = 'red')) + xlab('Date') + ylab('Conditional Covariance') + ggtitle('Conditional Covariance from Copula with optimal univaraite models and normal distribution') +
+  theme(plot.title = element_text(hjust = 0.5)) + scale_x_datetime(limits = c(min(data$DT), max(data$DT)), breaks=number_ticks(10)) + geom_line(data = data.frame('rcov' = rcov(cgarch_opt_fit_n)[1,3,], 'time' = data['DT']), aes(colour = 'darkgreen'), alpha = 0.5) +
+  geom_line(data = data.frame('rcov' = rcov(cgarch_opt_fit_n)[2,3,], 'time' = data['DT']), aes(colour = 'blue'), alpha = 0.5) + scale_color_discrete(name = "Conditional Covariance", labels = c("cov(EEM,SPY)", "cov(EEM,EZU)", 'cov(SPY,EZU)'))
+
 # Asymetric Copula DCC with optimal models
 CGARCH_opt_a_spec <- cgarchspec(multispec(c(uspec_opt1, uspec_opt2, uspec_opt3)), distribution.model = list(copula = c('mvt'), time.varying = T, asymetric = T))
 cgarch_opt_a_fit <- cgarchfit(CGARCH_opt_a_spec, data = data[,2:4])
@@ -331,54 +447,66 @@ CGARCH_opt_a_cov <- ggplot(data = data.frame('rcov' = rcov(cgarch_opt_a_fit)[1,2
 # Fit model with optional fit option 
 validation_models = list()
 validation_models$dcc11fit_val <- dccfit(DCC11spec, data = data_val[,2:4], fit = dcc11fit)
+validation_models$dcc11fit_val_n <- dccfit(DCC11spec_n, data = data_val[,2:4], fit = dcc11fit_n)
 validation_models$dcc11fit_f_val <- dccfit(DCC11spec_f, data = data_val[,2:4], fit = dcc11fit_f)
 validation_models$dcc11fit_a_val <- dccfit(DCC11spec_a, data = data_val[,2:4], fit = dcc11fit_a)
 validation_models$GGARCHfit_val <-gogarchfit(GGARCHspec, data_val[,2:4])
 validation_models$dcc_opt_fit_val <- dccfit(DCC_opt_spec, data = data_val[,2:4], fit = dcc_opt_fit)
+validation_models$dcc_opt_fit_val_n <- dccfit(DCC_opt_spec_n, data = data_val[,2:4], fit = dcc_opt_fit_n)
 validation_models$dcc_opt_a_fit_val <- dccfit(DCC_opt_a_spec, data = data_val[,2:4], fit = dcc_opt_a_fit)
 validation_models$dcc_opt_f_fit_val <-dccfit(DCC_opt_f_spec, data = data_pred[, 2:4], fit = dcc_opt_f_fit)
 
 validation_models$cgarch11_fit_val <- cgarchfit(CGARCH11spec, data = data[,2:4], fit = cgarch11_fit)
+validation_models$cgarch11_fit_val_n <- cgarchfit(CGARCH11spec_n, data = data[,2:4], fit = cgarch11_fit_n)
 validation_models$cgarch11_a_fit_val <- cgarchfit(CGARCH11spec_a, data = data_val[,2:4], fit = cgarch11_a_fit)
 validation_models$cgarch_opt_fit_val <- cgarchfit(CGARCH_opt_spec, data = data_val[,2:4], fit = cgarch_opt_fit)
+validation_models$cgarch_opt_fit_val_n <- cgarchfit(CGARCH_opt_spec_n, data = data_val[,2:4], fit = cgarch_opt_fit_n)
 validation_models$cgarch_opt_a_fit_val <- cgarchfit(CGARCH_opt_a_spec, data = data_val[,2:4], fit = cgarch_opt_a_fit)
 
-infoIC_table <- matrix(NA, nrow = 11, ncol = 2)
+infoIC_table <- matrix(NA, nrow = 15, ncol = 2)
 colnames(infoIC_table) <- c('BIC', 'AIC')
-rownames(infoIC_table) <- c('DCC11','DCC11_F', 'DCC11_A', 'GGARCH11', 'DCC11_opt', 'DCC11_OPT_A','DCC11_OPT_F', 'CGARCH11', 'CGARCH11_A', 'CGARCH11_opt', 'CGARCH11_opt_A')
+rownames(infoIC_table) <- c('DCC11', 'DCC11_N','DCC11_F', 'DCC11_A', 'GGARCH11', 'DCC11_opt', 'DCC11_opt_n', 'DCC11_OPT_A','DCC11_OPT_F', 'CGARCH11', 'CGARCH11_n', 'CGARCH11_A', 'CGARCH11_opt', 'CGARCH11_opt_n', 'CGARCH11_opt_A')
 
 
-infoIC_table[1,1] <- infocriteria(validation_models$dcc11fit_val)[1]
-infoIC_table[1,2] <- infocriteria(validation_models$dcc11fit_val)[2]
-infoIC_table[2,1] <- infocriteria(validation_models$dcc11fit_f_val)[1]
-infoIC_table[2,2] <- infocriteria(validation_models$dcc11fit_f_val)[2]
-infoIC_table[3,1] <- infocriteria(validation_models$dcc11fit_a_val)[1]
-infoIC_table[3,2] <- infocriteria(validation_models$dcc11fit_a_val)[2]
-infoIC_table[4,2] <- 2*length(coef(validation_models$GGARCHfit_val)) - 2*log(likelihood(validation_models$GGARCHfit_val))
-infoIC_table[4,1] <- length(coef(validation_models$GGARCHfit_val))*log(nrow(data_val)) - 2*log(likelihood(validation_models$GGARCHfit_val))
-infoIC_table[5,1] <- infocriteria(validation_models$dcc_opt_fit_val)[1]
-infoIC_table[5,2] <- infocriteria(validation_models$dcc_opt_fit_val)[2]
-infoIC_table[6,1] <- infocriteria(validation_models$dcc_opt_a_fit_val)[1]
-infoIC_table[6,2] <- infocriteria(validation_models$dcc_opt_a_fit_val)[2]
-infoIC_table[7,1] <- infocriteria(validation_models$dcc_opt_f_fit_val)[1]
-infoIC_table[7,2] <- infocriteria(validation_models$dcc_opt_f_fit_val)[2]
-infoIC_table[8,1] <- -34.245 # as seen from the show() option as no infocriteria() available for Copula-Garch
-infoIC_table[8,2] <- -34.284
-infoIC_table[9,1] <- -36.792
-infoIC_table[9,2] <- -36.969
-infoIC_table[10,1] <- -36.879
-infoIC_table[10,2] <- -37.082
-infoIC_table[11,1] <- -36.879
-infoIC_table[11,2] <- -37.082
+infoIC_table[1,1] <- infocriteria(validation_models$dcc11fit_val)[2]
+infoIC_table[1,2] <- infocriteria(validation_models$dcc11fit_val)[1]
+infoIC_table[2,1] <- infocriteria(validation_models$dcc11fit_val_n)[2]
+infoIC_table[2,2] <- infocriteria(validation_models$dcc11fit_val_n)[1]
+infoIC_table[3,1] <- infocriteria(validation_models$dcc11fit_f_val)[2]
+infoIC_table[3,2] <- infocriteria(validation_models$dcc11fit_f_val)[1]
+infoIC_table[4,1] <- infocriteria(validation_models$dcc11fit_a_val)[2]
+infoIC_table[4,2] <- infocriteria(validation_models$dcc11fit_a_val)[1]
+infoIC_table[5,2] <- 2*length(coef(validation_models$GGARCHfit_val)) - 2*log(likelihood(validation_models$GGARCHfit_val))
+infoIC_table[5,1] <- length(coef(validation_models$GGARCHfit_val))*log(nrow(data_val)) - 2*log(likelihood(validation_models$GGARCHfit_val))
+infoIC_table[6,1] <- infocriteria(validation_models$dcc_opt_fit_val)[2]
+infoIC_table[6,2] <- infocriteria(validation_models$dcc_opt_fit_val)[1]
+infoIC_table[7,1] <- infocriteria(validation_models$dcc_opt_fit_val_n)[2]
+infoIC_table[7,2] <- infocriteria(validation_models$dcc_opt_fit_val_n)[1]
+infoIC_table[8,1] <- infocriteria(validation_models$dcc_opt_a_fit_val)[2]
+infoIC_table[8,2] <- infocriteria(validation_models$dcc_opt_a_fit_val)[1]
+infoIC_table[9,1] <- infocriteria(validation_models$dcc_opt_f_fit_val)[2]
+infoIC_table[9,2] <- infocriteria(validation_models$dcc_opt_f_fit_val)[1]
+infoIC_table[10,1] <- -34.245 # as seen from the show() option as no infocriteria() available for Copula-Garch
+infoIC_table[10,2] <- -34.284
+infoIC_table[11,1] <- -34.217 
+infoIC_table[11,2] <- -34.255
+infoIC_table[12,1] <- -36.792
+infoIC_table[12,2] <- -36.969
+infoIC_table[13,1] <- -37.174
+infoIC_table[13,2] <- -37.402
+infoIC_table[14,1] <- -37.162
+infoIC_table[14,2] <- -37.381
+infoIC_table[15,1] <- -36.879
+infoIC_table[15,2] <- -37.082
 
 # TOP 3 MODELS FOR PREDICTIONS
 Rfast::nth(infoIC_table[,1], 1, descending = F, na.rm = T)
 Rfast::nth(infoIC_table[,1], 2, descending = F, na.rm = T)
 Rfast::nth(infoIC_table[,1], 3, descending = F, na.rm = T)
 
-Rfast::nth(infoIC_table[,2], 4, descending = F, na.rm = T)
+Rfast::nth(infoIC_table[,2], 1, descending = F, na.rm = T)
 Rfast::nth(infoIC_table[,2], 2, descending = F, na.rm = T)
-Rfast::nth(infoIC_table[,2], 3, descending = F, na.rm = T)
+Rfast::nth(infoIC_table[,2], 5, descending = F, na.rm = T)
 
 # DCC 1,1 with optimal univariate models
 # Asymetric DCC 1,1 with optimal univariate models
@@ -511,3 +639,139 @@ sqrt(n2)*mean(perf)/sqrt(spectrum(perf)$spec[2])  #DMW test
 
 sqrt(n2)*mean(perf)/sqrt(spectrum(perf)$spec[3])  #DMW test
 1-pnorm(sqrt(n2)*mean(perf)/sqrt(spectrum(perf)$spec[3]))
+
+
+library("writexl")
+write_xlsx(rolling_predictions1,"C:/Users/Lazar/Desktop/Financial Volatility/Assignment/DCC_opt_spec.xlsx")
+write_xlsx(rolling_predictions2,"C:/Users/Lazar/Desktop/Financial Volatility/Assignment/DCC_opt_a_spec.xlsx")
+write_xlsx(rolling_predictions3,"C:/Users/Lazar/Desktop/Financial Volatility/Assignment/DCC11spec.xlsx")
+
+
+# Simulations
+simulation_predictions1 <- data.frame(data = matrix(NA, nrow = nrow(data_pred), ncol = 9))
+simulation_predictions2 <- data.frame(data = matrix(NA, nrow = nrow(data_pred), ncol = 9))
+
+simulation_predictions1$Date <- data_pred$DT
+simulation_predictions2$Date <- data_pred$DT
+
+colnames(simulation_predictions1) <- c('varEEM', 'varSPY', 'varEZU', 'cov(EEM,SPY)', 'cov(EEM, EZU)', 'cov(SPY, EZU)', 'cor(EEM,SPY)', 'cor(EEM, EZU)', 'cor(SPY, EZU)', 'DT')
+colnames(simulation_predictions2) <- c('varEEM', 'varSPY', 'varEZU', 'cov(EEM,SPY)', 'cov(EEM, EZU)', 'cov(SPY, EZU)', 'cor(EEM,SPY)', 'cor(EEM, EZU)', 'cor(SPY, EZU)', 'DT')
+
+start_time <- Sys.time()
+data = rbind(data, data_val)
+CGARCH_opt_fit <- cgarchfit(CGARCH_opt_spec, data[,2:4])
+CGARCH_opt_fit_n <- cgarchfit(CGARCH_opt_spec_n, data[,2:4])
+for (i in 1:nrow(data_pred)){
+  if (i == 1){
+    CGARCH_opt_sim_t <- cgarchsim(CGARCH_opt_fit, n.sim =1, m.sim = 1000, presigma = t(as.matrix(sqrt(c(rcov(CGARCH_opt_fit)[1,1,length(data)] , rcov(CGARCH_opt_fit)[2,2,length(data)] , rcov(CGARCH_opt_fit)[3,3,length(data)])))) , prereturns = as.matrix(data[nrow(data), 2:4]), preR = matrix(c(1,rcor(CGARCH_opt_fit)[1,2,length(data)], rcor(CGARCH_opt_fit)[1,3,length(data)], rcor(CGARCH_opt_fit)[2,1,length(data)], 1, rcor(CGARCH_opt_fit)[2,3,length(data)],  rcor(CGARCH_opt_fit)[3,1,length(data)],  rcor(CGARCH_opt_fit)[3,2,length(data)],1), nrow = 3, ncol =3),  preQ = CGARCH_opt_fit@mfit$Qt[[length(CGARCH_opt_fit@mfit$Qt)]], preZ = tail(CGARCH_opt_fit@mfit$Z, 1), rseed = 8)
+    CGARCH_opt_sim_n <- cgarchsim(CGARCH_opt_fit_n, n.sim = 1, m.sim = 1000, presigma = t(as.matrix(sqrt(c(rcov(CGARCH_opt_fit_n)[1,1,length(data)] , rcov(CGARCH_opt_fit_n)[2,2,length(data)] , rcov(CGARCH_opt_fit_n)[3,3,length(data)])))),  prereturns = as.matrix(data_pred[nrow(data), 2:4]), preR =matrix(c(1,rcor(CGARCH_opt_fit_n)[1,2,length(data)], rcor(CGARCH_opt_fit_n)[1,3,length(data)], rcor(CGARCH_opt_fit_n)[2,1,length(data)], 1, rcor(CGARCH_opt_fit_n)[2,3,length(data)],  rcor(CGARCH_opt_fit_n)[3,1,length(data)],  rcor(CGARCH_opt_fit_n)[3,2,length(data)],1), nrow = 3, ncol =3) , preQ = CGARCH_opt_fit_n@mfit$Qt[[length(CGARCH_opt_fit_n@mfit$Qt)]], preZ = tail(CGARCH_opt_fit_n@mfit$Z, 1), rseed = 8)
+    simulation_predictions1[1,1] <- rcov(CGARCH_opt_sim_t)[1,1,1]
+    simulation_predictions1[1,2] <- rcov(CGARCH_opt_sim_t)[2,2,1]
+    simulation_predictions1[1,3] <- rcov(CGARCH_opt_sim_t)[3,3,1]
+    simulation_predictions1[1,4] <- rcov(CGARCH_opt_sim_t)[1,2,1]
+    simulation_predictions1[1,5] <- rcov(CGARCH_opt_sim_t)[1,3,1]
+    simulation_predictions1[1,6] <- rcov(CGARCH_opt_sim_t)[2,3,1]
+    simulation_predictions1[1,7] <- rcor(CGARCH_opt_sim_t)[1,2,1]
+    simulation_predictions1[1,8] <- rcor(CGARCH_opt_sim_t)[1,3,1]
+    simulation_predictions1[1,9] <- rcor(CGARCH_opt_sim_t)[2,3,1]
+    simulation_predictions2[1,1] <- rcov(CGARCH_opt_sim_n)[1,1,1]
+    simulation_predictions2[1,2] <- rcov(CGARCH_opt_sim_n)[2,2,1]
+    simulation_predictions2[1,3] <- rcov(CGARCH_opt_sim_n)[3,3,1]
+    simulation_predictions2[1,4] <- rcov(CGARCH_opt_sim_n)[1,2,1]
+    simulation_predictions2[1,5] <- rcov(CGARCH_opt_sim_n)[1,3,1]
+    simulation_predictions2[1,6] <- rcov(CGARCH_opt_sim_n)[2,3,1]
+    simulation_predictions2[1,7] <- rcor(CGARCH_opt_sim_n)[1,2,1]
+    simulation_predictions2[1,8] <- rcor(CGARCH_opt_sim_n)[1,3,1]
+    simulation_predictions2[1,9] <- rcor(CGARCH_opt_sim_n)[2,3,1]
+  } else {
+  CGARCH_opt_fit <- cgarchfit(CGARCH_opt_spec, data = rbind(data[,2:4], data_pred[1:i,2:4]))
+  CGARCH_opt_fit_n <- cgarchfit(CGARCH_opt_spec_n, data = rbind(data[,2:4], data_pred[1:i,2:4]))
+  CGARCH_opt_sim_t <- cgarchsim(CGARCH_opt_fit, n.sim =1, m.sim = 1000, presigma = as.matrix(sqrt(simulation_predictions1[i-1,1:3])) , prereturns = as.matrix(data_pred[i-1, 2:4]), preR = matrix(c(1,simulation_predictions1[i-1,7], simulation_predictions1[i-1,8], simulation_predictions1[i-1,7], 1, simulation_predictions1[i-1,9], simulation_predictions1[i-1,8], simulation_predictions1[i-1,9],1), nrow = 3, ncol =3), preQ = CGARCH_opt_fit@mfit$Qt[[length(CGARCH_opt_fit@mfit$Qt)]], preZ = tail(CGARCH_opt_fit@mfit$Z, 1) , rseed = 8)
+  CGARCH_opt_sim_n <- cgarchsim(CGARCH_opt_fit_n, n.sim = 1, m.sim = 1000, presigma = as.matrix(sqrt(simulation_predictions2[i-1,1:3])),  prereturns = as.matrix(data_pred[i-1, 2:4]),  preR = matrix(c(1,simulation_predictions2[i-1,7], simulation_predictions2[i-1,8], simulation_predictions2[i-1,7], 1, simulation_predictions2[i-1,9], simulation_predictions2[i-1,8], simulation_predictions2[i-1,9],1), nrow = 3, ncol =3), preQ = CGARCH_opt_fit_n@mfit$Qt[[length(CGARCH_opt_fit_n@mfit$Qt)]], preZ = tail(CGARCH_opt_fit_n@mfit$Z, 1) ,  rseed = 8)
+  simulation_predictions1[i,1] <- rcov(CGARCH_opt_sim_t)[1,1,1]
+  simulation_predictions1[i,2] <- rcov(CGARCH_opt_sim_t)[2,2,1]
+  simulation_predictions1[i,3] <- rcov(CGARCH_opt_sim_t)[3,3,1]
+  simulation_predictions1[i,4] <- rcov(CGARCH_opt_sim_t)[1,2,1]
+  simulation_predictions1[i,5] <- rcov(CGARCH_opt_sim_t)[1,3,1]
+  simulation_predictions1[i,6] <- rcov(CGARCH_opt_sim_t)[2,3,1]
+  simulation_predictions1[i,7] <- rcor(CGARCH_opt_sim_t)[1,2,1]
+  simulation_predictions1[i,8] <- rcor(CGARCH_opt_sim_t)[1,3,1]
+  simulation_predictions1[i,9] <- rcor(CGARCH_opt_sim_t)[2,3,1]
+  simulation_predictions2[i,1] <- rcov(CGARCH_opt_sim_n)[1,1,1]
+  simulation_predictions2[i,2] <- rcov(CGARCH_opt_sim_n)[2,2,1]
+  simulation_predictions2[i,3] <- rcov(CGARCH_opt_sim_n)[3,3,1]
+  simulation_predictions2[i,4] <- rcov(CGARCH_opt_sim_n)[1,2,1]
+  simulation_predictions2[i,5] <- rcov(CGARCH_opt_sim_n)[1,3,1]
+  simulation_predictions2[i,6] <- rcov(CGARCH_opt_sim_n)[2,3,1]
+  simulation_predictions2[i,7] <- rcor(CGARCH_opt_sim_n)[1,2,1]
+  simulation_predictions2[i,8] <- rcor(CGARCH_opt_sim_n)[1,3,1]
+  simulation_predictions2[i,9] <- rcor(CGARCH_opt_sim_n)[2,3,1]
+  }
+}
+end_time <- Sys.time()
+
+# Exporting fits data for 3 models
+
+dcc_opt_fit_results <- data.frame(data = matrix(NA, nrow = nrow(data), ncol = 9))
+dcc_opt_a_fit_results <- data.frame(data = matrix(NA, nrow = nrow(data), ncol = 9))
+dcc11fit_results <-data.frame(data = matrix(NA, nrow = nrow(data), ncol = 9))
+
+dcc_opt_fit_results$DT <- data$DT
+dcc_opt_a_fit_results$DT <- data$DT
+dcc11fit_results$DT <- data$DT
+
+colnames(dcc_opt_fit_results) <- c('varEEM', 'varSPY', 'varEZU', 'cov(EEM,SPY)', 'cov(EEM, EZU)', 'cov(SPY, EZU)', 'cor(EEM,SPY)', 'cor(EEM, EZU)', 'cor(SPY, EZU)', 'DT')
+colnames(dcc_opt_a_fit_results) <- c('varEEM', 'varSPY', 'varEZU', 'cov(EEM,SPY)', 'cov(EEM, EZU)', 'cov(SPY, EZU)', 'cor(EEM,SPY)', 'cor(EEM, EZU)', 'cor(SPY, EZU)', 'DT')
+colnames(dcc11fit_results) <- c('varEEM', 'varSPY', 'varEZU', 'cov(EEM,SPY)', 'cov(EEM, EZU)', 'cov(SPY, EZU)', 'cor(EEM,SPY)', 'cor(EEM, EZU)', 'cor(SPY, EZU)', 'DT')
+
+dcc_opt_fit_results$varEEM <- rcov(dcc_opt_fit)[1,1,]
+dcc_opt_fit_results$varSPY <- rcov(dcc_opt_fit)[2,2,]
+dcc_opt_fit_results$varEZU <- rcov(dcc_opt_fit)[3,3,]
+dcc_opt_fit_results$`cov(EEM,SPY)` <- rcov(dcc_opt_fit)[1,2,]
+dcc_opt_fit_results$`cov(EEM, EZU)` <- rcov(dcc_opt_fit)[1,3,]
+dcc_opt_fit_results$`cov(SPY, EZU)` <- rcov(dcc_opt_fit)[2,3,]
+dcc_opt_fit_results$`cor(EEM,SPY)` <- rcor(dcc_opt_fit)[1,2,]
+dcc_opt_fit_results$`cor(EEM, EZU)` <- rcor(dcc_opt_fit)[1,3,]
+dcc_opt_fit_results$`cor(SPY, EZU)` <- rcor(dcc_opt_fit)[2,3,]
+
+dcc_opt_a_fit_results$varEEM <- rcov(dcc_opt_a_fit)[1,1,]
+dcc_opt_a_fit_results$varSPY <- rcov(dcc_opt_a_fit)[2,2,]
+dcc_opt_a_fit_results$varEZU <- rcov(dcc_opt_a_fit)[3,3,]
+dcc_opt_a_fit_results$`cov(EEM,SPY)` <- rcov(dcc_opt_a_fit)[1,2,]
+dcc_opt_a_fit_results$`cov(EEM, EZU)` <- rcov(dcc_opt_a_fit)[1,3,]
+dcc_opt_a_fit_results$`cov(SPY, EZU)` <- rcov(dcc_opt_a_fit)[2,3,]
+dcc_opt_a_fit_results$`cor(EEM,SPY)` <- rcor(dcc_opt_a_fit)[1,2,]
+dcc_opt_a_fit_results$`cor(EEM, EZU)` <- rcor(dcc_opt_a_fit)[1,3,]
+dcc_opt_a_fit_results$`cor(SPY, EZU)` <- rcor(dcc_opt_a_fit)[2,3,]
+View(dcc_opt_fit_results)
+dcc11fit_results$varEEM <- rcov(dcc11fit)[1,1,]
+dcc11fit_results$varSPY <- rcov(dcc11fit)[2,2,]
+dcc11fit_results$varEZU <- rcov(dcc11fit)[3,3,]
+dcc11fit_results$`cov(EEM,SPY)` <- rcov(dcc11fit)[1,2,]
+dcc11fit_results$`cov(EEM, EZU)` <- rcov(dcc11fit)[1,3,]
+dcc11fit_results$`cov(SPY, EZU)` <- rcov(dcc11fit)[2,3,]
+dcc11fit_results$`cor(EEM,SPY)` <- rcor(dcc11fit)[1,2,]
+dcc11fit_results$`cor(EEM, EZU)` <- rcor(dcc11fit)[1,3,]
+dcc11fit_results$`cor(SPY, EZU)` <- rcor(dcc11fit)[2,3,]
+
+write_xlsx(dcc_opt_fit_results,"C:/Users/Lazar/Desktop/Financial Volatility/Assignment/dcc_opt_fit_results.xlsx")
+write_xlsx(dcc_opt_a_fit_results,"C:/Users/Lazar/Desktop/Financial Volatility/Assignment/dcc_opt_a_fit_results.xlsx")
+write_xlsx(dcc11fit_results,"C:/Users/Lazar/Desktop/Financial Volatility/Assignment/dcc11fit_results.xlsx")
+
+a <- (data.frame(data = a))
+b <- (data.frame(data = b))
+d <- (data.frame(data = d))
+colnames(a) <- c('EEM', 'SPY', 'EZU')
+colnames(b) <- c('EEM', 'SPY', 'EZU')
+colnames(d) <- c('EEM', 'SPY', 'EZU')
+
+write_xlsx(a,"C:/Users/Lazar/Desktop/Financial Volatility/Assignment/dcc_opt_weights.xlsx")
+write_xlsx(b,"C:/Users/Lazar/Desktop/Financial Volatility/Assignment/dcc_opt_a_weights.xlsx")
+write_xlsx(d,"C:/Users/Lazar/Desktop/Financial Volatility/Assignment/dcc11_weights.xlsx")
+
+
+CGARCH_opt_fit@mfit$Qt[[length(CGARCH_opt_fit@mfit$Qt)]]
+tail(CGARCH_opt_fit@mfit$Z, 1)
+
+
+rcov(CGARCH_opt_fit)[,,length(data)]
